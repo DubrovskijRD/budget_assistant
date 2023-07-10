@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:13.2
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=$DATABASE_USER
+      - POSTGRES_PASSWORD=$DATABASE_PASSWORD
+      - POSTGRES_DB=$DATABASE_NAME
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: gunicorn entrypoints.api.app:init --bind 0.0.0.0:8080 --worker-class aiohttp.GunicornWebWorker --reload
+
+
+networks:
+  default:
+      name: budget_assistant
+
+volumes:
+  postgres_data:
